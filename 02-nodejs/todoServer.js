@@ -41,9 +41,89 @@
  */
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const port = 3000;
 const app = express();
+let todoList = [];
+let counter = 0;
 
 app.use(bodyParser.json());
+
+function getTodo(todoId) {
+  for(let i=0; i<todoList.length; i++) {
+    let todo = todoList[i];
+    if(todo.id === todoId) {
+      console.log(todo);
+      return todo;
+    }
+  }
+}
+
+function getAllTodos(req, res) {
+  res.send(todoList);
+}
+
+function getTodoById(req, res) {
+  //req.params.id is string so changed it to int
+  let todoId = parseInt(req.params.id);
+  let todo = getTodo(todoId);
+  console.log(todoId);
+  console.log(todo)
+  if(todo === undefined) {
+    res.status(404).send();
+  } else {
+    res.send(todo);
+  }
+}
+
+function createTodo(req, res) {
+  let todo = req.body;
+  todo.id = counter;
+  response = {
+    id: counter
+  }
+  
+  todoList.push(todo);
+  console.log(todoList);
+  counter++;
+  res.status(201).send(response);
+}
+
+function editTodoById(req, res) {
+  let idToUpdated = parseInt(req.params.id);
+  let todo = getTodo(idToUpdated);
+  todoList = todoList.filter((todo) => todo.id !== idToUpdated);
+  if(todo === undefined) {
+    res.status(404).send();
+  } else {
+    let reqBody = req.body;
+    reqBody.id = idToUpdated;
+    todoList.push(reqBody);
+    console.log(todoList);
+    res.status(200).send();
+  }
+
+}
+
+function deleteTodoById(req, res) {
+  let idToDelete = parseInt(req.params.id);
+  let todo = getTodo(idToDelete);
+  todoList = todoList.filter((todo) => todo.id !== idToDelete);
+  console.log(todoList);
+  if(todo === undefined) {
+    res.status(404).send();
+  } else {
+    res.status(200).send();
+  }
+}
+
+app.get('/todos', getAllTodos);
+app.get('/todos/:id', getTodoById)
+app.post('/todos', createTodo);
+app.put('/todos/:id', editTodoById);
+app.delete('/todos/:id', deleteTodoById);
+
+app.listen(port, () => {
+  console.log(`Todo App listening on port ${port}`)
+})
 
 module.exports = app;
